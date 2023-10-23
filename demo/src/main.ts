@@ -55,11 +55,11 @@ import '@codingame/monaco-vscode-configuration-editing-default-extension'
 import '@codingame/monaco-vscode-markdown-math-default-extension'
 import '@codingame/monaco-vscode-npm-default-extension'
 import '@codingame/monaco-vscode-media-preview-default-extension'
-
+// If there's a remote authority, it imports the features for remote extensions.
 if (remoteAuthority != null) {
   import('./features/remoteExtension')
 }
-
+// It creates a model reference, which is a representation of an open file.
 const modelRef = await createModelReference(monaco.Uri.file('/tmp/test.js'), `// import anotherfile
 let variable = 1
 function inc () {
@@ -71,6 +71,8 @@ while (variable < 5000) {
   console.log('Hello world', variable);
 }`)
 
+
+// It opens two text documents: one for the main document and another in a readonly state.
 const [mainDocument] = await Promise.all([
   vscode.workspace.openTextDocument(modelRef.object.textEditorModel!.uri),
   vscode.workspace.openTextDocument(monaco.Uri.file('/tmp/test_readonly.js')) // open the file so vscode sees it's locked
@@ -79,13 +81,14 @@ await vscode.window.showTextDocument(mainDocument, {
   preview: false
 })
 
+// Any change in the main document's content is reflected in the fake output channel.
 anotherFakeOutputChannel.replace(mainDocument.getText())
 vscode.workspace.onDidChangeTextDocument((e) => {
   if (e.document === mainDocument && e.contentChanges.length > 0) {
     anotherFakeOutputChannel.replace(e.document.getText())
   }
 })
-
+// It sets a mock diagnostic error on the model's content.
 const diagnostics = vscode.languages.createDiagnosticCollection('demo')
 diagnostics.set(modelRef.object.textEditorModel!.uri, [{
   range: new vscode.Range(2, 9, 2, 12),
@@ -95,6 +98,8 @@ diagnostics.set(modelRef.object.textEditorModel!.uri, [{
   code: 42
 }])
 
+
+// Creates a model reference for user settings and sets up an editor for the same.
 const settingsModelReference = await createModelReference(monaco.Uri.from({ scheme: 'user', path: '/settings.json' }), `{
   "workbench.colorTheme": "Default Dark+",
   "workbench.iconTheme": "vs-seti",
@@ -122,6 +127,7 @@ const settingEditor = createConfiguredEditor(document.getElementById('settings-e
   automaticLayout: true
 })
 
+// Adds a custom action to the settings editor which pops up an info dialog when executed.
 settingEditor.addAction({
   id: 'custom-action',
   async run () {
@@ -134,6 +140,7 @@ settingEditor.addAction({
   contextMenuGroupId: 'custom'
 })
 
+// Creates a model reference for user keybindings and sets up an editor for the same.
 const keybindingsModelReference = await createModelReference(monaco.Uri.from({ scheme: 'user', path: '/keybindings.json' }), `[
   {
     "key": "ctrl+d",
@@ -146,6 +153,8 @@ createConfiguredEditor(document.getElementById('keybindings-editor')!, {
   automaticLayout: true
 })
 
+
+// Listens for a click event to select a directory using the native file picker.
 document.querySelector('#filesystem')!.addEventListener('click', async () => {
   const dirHandle = await window.showDirectoryPicker()
 
@@ -158,6 +167,7 @@ document.querySelector('#filesystem')!.addEventListener('click', async () => {
   })
 })
 
+// Initiates a debugging session on a button click.
 document.querySelector('#run')!.addEventListener('click', () => {
   void vscode.debug.startDebugging(undefined, {
     name: 'Test',
@@ -166,15 +176,21 @@ document.querySelector('#run')!.addEventListener('click', () => {
   })
 })
 
+// Opens the user settings UI on a button click and scrolls to the top of the window.
 document.querySelector('#settingsui')!.addEventListener('click', async () => {
   await StandaloneServices.get(IPreferencesService).openUserSettings()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 
+
+// Opens the keybindings settings UI on a button click and scrolls to the top of the window.
+
 document.querySelector('#keybindingsui')!.addEventListener('click', async () => {
   await StandaloneServices.get(IPreferencesService).openGlobalKeybindingSettings(false)
   window.scrollTo({ top: 0, behavior: 'smooth' })
 })
+
+// Demonstrates a custom editor panel. The title of this editor pane toggles between two strings at a regular interval.
 
 document.querySelector('#customEditorPanel')!.addEventListener('click', async () => {
   const input = new CustomEditorInput({
@@ -205,18 +221,25 @@ document.querySelector('#customEditorPanel')!.addEventListener('click', async ()
   })
 })
 
+// Clears the browser's storage when a button is clicked.
+
 document.querySelector('#clearStorage')!.addEventListener('click', async () => {
   await clearStorage()
 })
 
+
+// Toggles the visibility of the panel part on a button click.
 document.querySelector('#togglePanel')!.addEventListener('click', async () => {
   setPartVisibility(Parts.PANEL_PART, !isPartVisibile(Parts.PANEL_PART))
 })
 
+
+// Toggles the visibility of the auxiliary bar on a button click.
 document.querySelector('#toggleAuxiliary')!.addEventListener('click', async () => {
   setPartVisibility(Parts.AUXILIARYBAR_PART, !isPartVisibile(Parts.AUXILIARYBAR_PART))
 })
 
+// Retrieves the locale from the URL and sets it in a select dropdown. Changes in the dropdown will update the URL's locale parameter.
 const locale = new URLSearchParams(window.location.search).get('locale') ?? ''
 const select: HTMLSelectElement = document.querySelector('#localeSelect')!
 select.value = locale

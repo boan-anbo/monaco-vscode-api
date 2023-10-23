@@ -8,6 +8,7 @@
     "clean": "tsc -b -c",
     "compile": "tsc",
     "start": "NODE_OPTIONS=--experimental-import-meta-resolve vite --config vite.config.ts",
+    "start-win": "set NODE_OPTIONS=--experimental-import-meta-resolve && vite --config vite.config.ts",
     "start:debug": "vite --config vite.config.ts --debug --force",
     "build": "tsc --noEmit && vite --config vite.config.ts build",
     "build:github": "tsc --noEmit && vite --config vite.github-page.config.ts build && touch dist/.nojekyll",

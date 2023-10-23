@@ -2,21 +2,35 @@ import { IResolvedTextEditorModel, IReference, OpenEditor } from '@codingame/mon
 import * as monaco from 'monaco-editor'
 import { createConfiguredEditor } from 'vscode/monaco'
 
+/**
+ * Represents the currently active editor and its associated model reference.
+ */
 let currentEditor: ({
   modelRef: IReference<IResolvedTextEditorModel>
   editor: monaco.editor.IStandaloneCodeEditor
 } & monaco.IDisposable) | null = null
+
+/**
+ * Opens a new code editor overlayed on the current page.
+ * If an editor is already open, it will be closed before opening the new one.
+ *
+ * @param modelRef - The text editor model reference used to configure the editor.
+ * @returns The opened Monaco code editor instance.
+ */
 export const openNewCodeEditor: OpenEditor = async (modelRef) => {
+  // Dispose current editor if it exists.
   if (currentEditor != null) {
     currentEditor.dispose()
     currentEditor = null
   }
+  // Create an overlay container for the editor.
   const container = document.createElement('div')
   container.style.position = 'fixed'
   container.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
   container.style.top = container.style.bottom = container.style.left = container.style.right = '0'
   container.style.cursor = 'pointer'
 
+  // Create an element for the editor.
   const editorElem = document.createElement('div')
   editorElem.style.position = 'absolute'
   editorElem.style.top = editorElem.style.bottom = editorElem.style.left = editorElem.style.right = '0'
@@ -28,6 +42,7 @@ export const openNewCodeEditor: OpenEditor = async (modelRef) => {
 
   document.body.appendChild(container)
   try {
+    // Configure and instantiate the editor.
     const editor = createConfiguredEditor(
       editorElem,
       {
@@ -36,7 +51,7 @@ export const openNewCodeEditor: OpenEditor = async (modelRef) => {
         automaticLayout: true
       }
     )
-
+    // Save current editor and associated actions.
     currentEditor = {
       dispose: () => {
         editor.dispose()
@@ -48,6 +63,7 @@ export const openNewCodeEditor: OpenEditor = async (modelRef) => {
       editor
     }
 
+    // Add event listeners to handle editor and overlay interactions.
     editor.onDidBlurEditorWidget(() => {
       currentEditor?.dispose()
     })

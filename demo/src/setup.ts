@@ -45,14 +45,21 @@ import { TerminalBackend } from './features/terminal'
 import { openNewCodeEditor } from './features/editor'
 import { toCrossOriginWorker, toWorkerConfig } from './tools/workers'
 
+// The module appears to be setting up a Monaco editor environment with various extensions and services.
+
 // Workers
+// Defines a type for a function that returns a new Worker instance.
 export type WorkerLoader = () => Worker
+
+// A partial record that maps strings to functions creating Web Workers.
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
   editorWorkerService: () => new (toCrossOriginWorker(EditorWorker))(),
   textMateWorker: () => new (toCrossOriginWorker(TextMateWorker))(),
   outputLinkComputer: () => new (toCrossOriginWorker(OutputLinkComputerWorker))(),
   languageDetectionWorkerService: () => new (toCrossOriginWorker(LanguageDetectionWorker))()
 }
+
+// Provides a global `MonacoEnvironment` to the Monaco editor for worker initialization.
 window.MonacoEnvironment = {
   getWorker: function (moduleId, label) {
     const workerFactory = workerLoaders[label]
@@ -62,13 +69,14 @@ window.MonacoEnvironment = {
     throw new Error(`Unimplemented worker ${label} (${moduleId})`)
   }
 }
-
+// Parsing URL parameters.
 const params = new URL(document.location.href).searchParams
 export const remoteAuthority = params.get('remoteAuthority') ?? undefined
 const connectionToken = params.get('connectionToken') ?? undefined
 const remotePath = remoteAuthority != null ? params.get('remotePath') ?? undefined : undefined
 
 // Override services
+// Initializing Monaco services with various overrides.
 await initializeMonacoService({
   ...getExtensionServiceOverride(toWorkerConfig(ExtensionHostWorker)),
   ...getModelServiceOverride(),
@@ -108,14 +116,19 @@ await initializeMonacoService({
   }),
   ...getWorkspaceTrustOverride()
 })
+
+// Disable logging for the editor.
 StandaloneServices.get(ILogService).setLevel(LogLevel.Off)
 
+// Clear browser storage.
 export async function clearStorage (): Promise<void> {
   await (await getService(IStorageService) as BrowserStorageService).clear()
 }
 
+// Initialize additional VS Code extensions for the editor.
 await initializeVscodeExtensions()
 
+// Attach various UI parts to the corresponding DOM elements and handle their visibility.
 for (const { part, element } of [
   { part: Parts.TITLEBAR_PART, element: '#titleBar' },
   { part: Parts.BANNER_PART, element: '#banner' },
